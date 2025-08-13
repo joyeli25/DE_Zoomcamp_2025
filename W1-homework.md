@@ -28,7 +28,7 @@ docker run -it python:3.12.8 bash
 >root@2defe6400ba5:/# pip --version
 pip 24.3.1 from /usr/local/lib/python3.12/site-packages/pip (python 3.12)
 
-###Answer:
+#### Answer:
 - 24.3.1
 
 
@@ -82,7 +82,7 @@ postgres (172.21.0.2:5432) open
 da04ca5309f9   dpage/pgadmin4:latest   "/entrypoint.sh"         15 seconds ago   Up 9 seconds   443/tcp, 0.0.0.0:8080->80/tcp, :::8080->80/tcp   pgadmin
 05da863b7097   postgres:17-alpine      "docker-entrypoint.s…"   15 seconds ago   Up 9 seconds   0.0.0.0:5433->5432/tcp, :::5433->5432/tcp        postgres
 
-###Answer:
+#### Answer:
 - postgres:5432
 - db:5432
 
@@ -167,7 +167,7 @@ and lpep_dropoff_datetime<'2019-11-01'
 >"up_to-1_mile"	"1-3_mile"	"3-7_mile"	"7-10_mile"	"above_10_mile"
 104802	198924	109603	27678	35189
 
-###Answers:
+#### Answers:
 - 104,802;  198,924;  109,603;  27,678;  35,189
 
 
@@ -188,7 +188,7 @@ limit 1
 >"date"	"max"
 "2019-10-31"	515.89
 
-###Answer:
+#### Answer:
 - 2019-10-31
 
 
@@ -213,7 +213,7 @@ limit 3
 "East Harlem South"	16797.26000000007
 "Morningside Heights"	13029.79000000003
 
-###Answer:
+#### Answer:
 - East Harlem North, East Harlem South, Morningside Heights
 
 
@@ -242,6 +242,7 @@ limit 1
 >"Zone"	"max"
 "JFK Airport"	87.3
 
+#### Answer:
 - JFK Airport
 
 
@@ -284,7 +285,7 @@ google_storage_bucket.demo-bucket: Destruction complete after 0s
 
 Destroy complete! Resources: 2 destroyed.
 
-###Answers:
+#### Answer:
 - terraform init, terraform apply -auto-approve, terraform destroy
 
 
