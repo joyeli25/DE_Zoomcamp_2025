@@ -27,22 +27,29 @@ As a hint, Kestra makes that process really easy:
 Complete the Quiz shown below. It’s a set of 6 multiple-choice questions to test your understanding of workflow orchestration, Kestra and ETL pipelines for data lakes and warehouses.
 
 1) Within the execution for `Yellow` Taxi data for the year `2020` and month `12`: what is the uncompressed file size (i.e. the output file `yellow_tripdata_2020-12.csv` of the `extract` task)?
-- 128.3 MiB
-- 134.5 MiB
-- 364.7 MiB
-- 692.6 MiB
+
+#### Answer:
+- 128.3 MiB ( I actually never see there is file size in the output page)
+
 
 2) What is the rendered value of the variable `file` when the inputs `taxi` is set to `green`, `year` is set to `2020`, and `month` is set to `04` during execution?
-- `{{inputs.taxi}}_tripdata_{{inputs.year}}-{{inputs.month}}.csv` 
+
+>kestra:///zoomcamp/02-postgres-taxi-scheduled/executions/3OidVtZnkLH3CMHQxnUIwT/tasks/extract/1SNAiLyLY5OXJ46FJylAZt/4Oeogijrw1TyhR2m0Qi8AT-green_tripdata_2020-04.csv
+#### Answer:
 - `green_tripdata_2020-04.csv`
-- `green_tripdata_04_2020.csv`
-- `green_tripdata_2020.csv`
+
 
 3) How many rows are there for the `Yellow` Taxi data for all CSV files in the year 2020?
-- 13,537.299
+   ```sql
+   SELECT count(*) FROM public.yellow_tripdata
+where left(filename,20)='yellow_tripdata_2020'
+```
+>"count"
+24648499
+
+#### Answer:
 - 24,648,499
-- 18,324,219
-- 29,430,127
+
 
 4) How many rows are there for the `Green` Taxi data for all CSV files in the year 2020?
 - 5,327,301
