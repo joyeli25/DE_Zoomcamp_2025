@@ -40,8 +40,8 @@ Complete the Quiz shown below. It’s a set of 6 multiple-choice questions to te
 
 
 3) How many rows are there for the `Yellow` Taxi data for all CSV files in the year 2020?
-   ```sql
-   SELECT count(*) FROM public.yellow_tripdata
+```sql
+SELECT count(*) FROM public.yellow_tripdata
 where left(filename,20)='yellow_tripdata_2020'
 ```
 >"count"
