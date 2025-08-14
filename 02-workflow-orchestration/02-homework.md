@@ -52,22 +52,50 @@ where left(filename,20)='yellow_tripdata_2020'
 
 
 4) How many rows are there for the `Green` Taxi data for all CSV files in the year 2020?
-- 5,327,301
-- 936,199
+```sql
+SELECT count(*) FROM public.green_tripdata
+where left(filename,19)='green_tripdata_2020'
+```
+>"count"
+1734051
+
+#### Answer:
 - 1,734,051
-- 1,342,034
+
 
 5) How many rows are there for the `Yellow` Taxi data for the March 2021 CSV file?
-- 1,428,092
-- 706,911
+```sql
+SELECT count(*) FROM public.yellow_tripdata
+where left(filename,23)='yellow_tripdata_2021-03'
+```
+>"count"
+1925152
+>
+#### Answer:
 - 1,925,152
-- 2,561,031
+
 
 6) How would you configure the timezone to New York in a Schedule trigger?
-- Add a `timezone` property set to `EST` in the `Schedule` trigger configuration  
+>By default, Kestra uses UTC. To schedule flows according to New York time, include the timezone property with the IANA timezone identifier America/New_York. Foe example:
+```yaml
+triggers:
+  - id: green_schedule
+    type: io.kestra.plugin.core.trigger.Schedule
+    cron: "0 9 1 * *"
+    timezone: America/New_York
+    inputs:
+      taxi: green
+
+  - id: yellow_schedule
+    type: io.kestra.plugin.core.trigger.Schedule
+    cron: "0 10 1 * *"
+    timezone: America/New_York
+    inputs:
+      taxi: yellow
+```
+#### Answer:
 - Add a `timezone` property set to `America/New_York` in the `Schedule` trigger configuration
-- Add a `timezone` property set to `UTC-5` in the `Schedule` trigger configuration
-- Add a `location` property set to `New_York` in the `Schedule` trigger configuration  
+ 
 
 
 ## Submitting the solutions
