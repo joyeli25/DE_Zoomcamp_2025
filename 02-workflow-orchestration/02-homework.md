@@ -76,7 +76,7 @@ where left(filename,23)='yellow_tripdata_2021-03'
 
 
 6) How would you configure the timezone to New York in a Schedule trigger?
->By default, Kestra uses UTC. To schedule flows according to New York time, include the timezone property with the IANA timezone identifier America/New_York. For example:
+>By default, Kestra uses UTC. To schedule flows according to New York time, include the timezone property with the IANA timezone identifier America/New_York. In our case, this would be the updates in 02_postgres_taxi_scheduled.yaml file:
 ```yaml
 triggers:
   - id: green_schedule
