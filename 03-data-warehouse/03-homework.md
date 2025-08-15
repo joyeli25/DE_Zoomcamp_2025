@@ -44,9 +44,7 @@ OPTIONS (
 );
 SELECT count(distinct PULocationID) FROM `copper-seeker-466202-f5.trips_data_all.external_yellow_tripdata_2024_01-06`;
 ```
->Duration
-0 sec
-Bytes processed
+>Bytes processed
 0 B (results cached)
 Bytes billed
 0 B
@@ -54,9 +52,7 @@ Bytes billed
 ```sql
 SELECT count(distinct PULocationID) FROM `copper-seeker-466202-f5.trips_data_all.yellow_tripdata_2024_01-06`;
 ```
->Duration
-0 sec
-Bytes processed
+>Bytes processed
 155.12 MB
 Bytes billed
 156 MB
@@ -145,7 +141,18 @@ It is best practice in Big Query to always cluster your data:
 
 ## (Bonus: Not worth points) Question 9:
 No Points: Write a `SELECT count(*)` query FROM the materialized table you created. How many bytes does it estimate will be read? Why?
-
+```sql
+SELECT count(*) FROM `copper-seeker-466202-f5.trips_data_all.yellow_tripdata_2024_01-06`;
+```
+>Bytes processed
+0 B
+Bytes billed
+0 B
+Slot milliseconds
+2522
+>BigQuery stores row count statistics in its metadata. For COUNT(*):
+It doesn’t scan the actual data.
+It reads precomputed metadata (like total_rows in INFORMATION_SCHEMA).
 
 ## Submitting the solutions
 
