@@ -150,6 +150,7 @@ Bytes billed
 0 B
 Slot milliseconds
 2522
+
 >BigQuery stores row count statistics in its metadata. For COUNT(*):
 It doesn’t scan the actual data.
 It reads precomputed metadata (like total_rows in INFORMATION_SCHEMA).
