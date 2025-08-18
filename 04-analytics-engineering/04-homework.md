@@ -45,7 +45,11 @@ from {{ source('raw_nyc_tripdata', 'ext_green_taxi' ) }}
 ```
 
 #### Answer:
+~~- `select * from dtc_zoomcamp_2025.raw_nyc_tripdata.ext_green_taxi`~~
+~~- `select * from dtc_zoomcamp_2025.my_nyc_tripdata.ext_green_taxi`~~
 - `select * from myproject.raw_nyc_tripdata.ext_green_taxi`
+~~- `select * from myproject.my_nyc_tripdata.ext_green_taxi`~~
+~~- `select * from dtc_zoomcamp_2025.raw_nyc_tripdata.green_taxi`~~
 
 
 
@@ -65,7 +69,11 @@ where pickup_datetime >= CURRENT_DATE - INTERVAL '30' DAY
 What would you change to accomplish that in a such way that command line arguments takes precedence over ENV_VARs, which takes precedence over DEFAULT value?
 
 #### Answer:
+~~- Add `ORDER BY pickup_datetime DESC` and `LIMIT {{ var("days_back", 30) }}`~~
+~~- Update the WHERE clause to `pickup_datetime >= CURRENT_DATE - INTERVAL '{{ var("days_back", 30) }}' DAY`~~
+~~- Update the WHERE clause to `pickup_datetime >= CURRENT_DATE - INTERVAL '{{ env_var("DAYS_BACK", "30") }}' DAY`~~
 - Update the WHERE clause to `pickup_datetime >= CURRENT_DATE - INTERVAL '{{ var("days_back", env_var("DAYS_BACK", "30")) }}' DAY`
+~~- Update the WHERE clause to `pickup_datetime >= CURRENT_DATE - INTERVAL '{{ env_var("DAYS_BACK", var("days_back", "30")) }}' DAY`~~
 
 
 ### Question 3: dbt Data Lineage and Execution
@@ -77,6 +85,10 @@ Considering the data lineage below **and** that taxi_zone_lookup is the **only**
 Select the option that does **NOT** apply for materializing `fct_taxi_monthly_zone_revenue`:
 
 #### Answer:
+~~- `dbt run`~~
+~~- `dbt run --select +models/core/dim_taxi_trips.sql+ --target prod`~~
+~~- `dbt run --select +models/core/fct_taxi_monthly_zone_revenue.sql`~~
+~~- `dbt run --select +models/core/`~~
 - `dbt run --select models/staging/+`
 
 
@@ -112,6 +124,7 @@ And use on your staging, dim_ and fact_ models as:
 #### Answer:
 That all being said, regarding macro above, **select all statements that are true to the models using it**:
 - Setting a value for  `DBT_BIGQUERY_TARGET_DATASET` env var is mandatory, or it'll fail to compile
+~~- Setting a value for `DBT_BIGQUERY_STAGING_DATASET` env var is mandatory, or it'll fail to compile~~
 - When using `core`, it materializes in the dataset defined in `DBT_BIGQUERY_TARGET_DATASET`
 - When using `stg`, it materializes in the dataset defined in `DBT_BIGQUERY_STAGING_DATASET`, or defaults to `DBT_BIGQUERY_TARGET_DATASET`
 - When using `staging`, it materializes in the dataset defined in `DBT_BIGQUERY_STAGING_DATASET`, or defaults to `DBT_BIGQUERY_TARGET_DATASET`
