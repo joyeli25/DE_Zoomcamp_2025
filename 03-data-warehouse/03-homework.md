@@ -144,16 +144,18 @@ No Points: Write a `SELECT count(*)` query FROM the materialized table you creat
 ```sql
 SELECT count(*) FROM `copper-seeker-466202-f5.trips_data_all.yellow_tripdata_2024_01-06`;
 ```
->Bytes processed
+#### Answer:
+Bytes processed
 0 B
 Bytes billed
 0 B
 Slot milliseconds
 2522
 
->BigQuery stores row count statistics in its metadata. For COUNT(*):
+BigQuery stores row count statistics in its metadata. For COUNT(*):
 It doesn’t scan the actual data.
 It reads precomputed metadata (like total_rows in INFORMATION_SCHEMA).
+
 
 ## Submitting the solutions
 
