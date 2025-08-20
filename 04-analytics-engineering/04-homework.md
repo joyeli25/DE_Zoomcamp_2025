@@ -150,6 +150,43 @@ You might want to add some new dimensions `year` (e.g.: 2019, 2020), `quarter` (
 
 ***Important Note: The Year-over-Year (YoY) growth percentages provided in the examples are purely illustrative. You will not be able to reproduce these exact values using the datasets provided for this homework.***
 
+```sql
+{{ config(materialized="table") }}
+
+with
+    quarterly_revenue as (
+        select
+            service_type,
+            extract(year from pickup_datetime) as revenue_year,
+            extract(quarter from pickup_datetime) as revenue_quarter,
+            sum(total_amount) as quarterly_revenue_amt
+        from {{ ref("dim_taxi_trips") }}
+        where
+            pickup_datetime is not null
+            and extract(year from pickup_datetime) in (2019, 2020)
+        group by 1, 2, 3
+    )
+
+select
+    service_type,
+    revenue_year,
+    revenue_quarter,
+    quarterly_revenue_amt,
+    lag(quarterly_revenue_amt) over (
+        partition by service_type, revenue_quarter order by revenue_year
+    ) as prev_year_quarterly_revenue,
+    100 * (
+        quarterly_revenue_amt - lag(quarterly_revenue_amt) over (
+            partition by service_type, revenue_quarter order by revenue_year
+        )
+    )
+    / lag(quarterly_revenue_amt) over (
+        partition by service_type, revenue_quarter order by revenue_year
+    ) as yoy_growth_percent
+from quarterly_revenue
+order by 6 desc, 1
+```
+
 Considering the YoY Growth in 2020, which were the yearly quarters with the best (or less worse) and worst results for green, and yellow
 
 - ~~green: {best: 2020/Q2, worst: 2020/Q1}, yellow: {best: 2020/Q2, worst: 2020/Q1}~~
@@ -165,13 +202,47 @@ Considering the YoY Growth in 2020, which were the yearly quarters with the best
 2. Filter out invalid entries (`fare_amount > 0`, `trip_distance > 0`, and `payment_type_description in ('Cash', 'Credit card')`)
 3. Compute the **continous percentile** of `fare_amount` partitioning by service_type, year and and month
 
+```sql
+{{ config(materialized="table") }}
+
+with
+    monthly_data as (
+        select
+            service_type,
+            extract(year from pickup_datetime) as year,
+            extract(month from pickup_datetime) as month,
+            fare_amount
+        from {{ ref("dim_taxi_trips") }}
+        where
+            fare_amount > 0
+            and trip_distance > 0
+            and payment_type_description in ('Cash', 'Credit card')
+            and extract(year from pickup_datetime) in (2019, 2020)
+    )
+select distinct
+    service_type,
+    year,
+    month,
+    -- continuous percentiles
+    percentile_cont(fare_amount, 0.90) over (
+        partition by service_type, year, month
+    ) as p90_fare,
+    percentile_cont(fare_amount, 0.95) over (
+        partition by service_type, year, month
+    ) as p95_fare,
+    percentile_cont(fare_amount, 0.97) over (
+        partition by service_type, year, month
+    ) as p97_fare
+from monthly_data
+```
+
 Now, what are the values of `p97`, `p95`, `p90` for Green Taxi and Yellow Taxi, in April 2020?
 
-- green: {p97: 55.0, p95: 45.0, p90: 26.5}, yellow: {p97: 52.0, p95: 37.0, p90: 25.5}
+- ~~green: {p97: 55.0, p95: 45.0, p90: 26.5}, yellow: {p97: 52.0, p95: 37.0, p90: 25.5}~~
 - green: {p97: 55.0, p95: 45.0, p90: 26.5}, yellow: {p97: 31.5, p95: 25.5, p90: 19.0}
-- green: {p97: 40.0, p95: 33.0, p90: 24.5}, yellow: {p97: 52.0, p95: 37.0, p90: 25.5}
-- green: {p97: 40.0, p95: 33.0, p90: 24.5}, yellow: {p97: 31.5, p95: 25.5, p90: 19.0}
-- green: {p97: 55.0, p95: 45.0, p90: 26.5}, yellow: {p97: 52.0, p95: 25.5, p90: 19.0}
+- ~~green: {p97: 40.0, p95: 33.0, p90: 24.5}, yellow: {p97: 52.0, p95: 37.0, p90: 25.5}~~
+- ~~green: {p97: 40.0, p95: 33.0, p90: 24.5}, yellow: {p97: 31.5, p95: 25.5, p90: 19.0}~~
+- ~~green: {p97: 55.0, p95: 45.0, p90: 26.5}, yellow: {p97: 52.0, p95: 25.5, p90: 19.0}~~
 
 
 ### Question 7: Top #Nth longest P90 travel time Location for FHV
