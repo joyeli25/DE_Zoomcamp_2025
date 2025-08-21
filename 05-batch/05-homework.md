@@ -95,12 +95,29 @@ Consider only trips that started on the 15th of October.
 
 ## Question 4: Longest trip
 
+```sql
+spark.sql("""
+SELECT
+    (unix_timestamp(dropoff_datetime) - unix_timestamp(pickup_datetime)) / 3600.0 as trip_duration
+FROM
+    yellow_trips_data
+order by 1 desc
+limit 1
+""").show()
+```
+>[Stage 27:=============================================>          (13 + 3) / 16]
++-------------+
+|trip_duration|
++-------------+
+|   162.617778|
++-------------+
+
 What is the length of the longest trip in the dataset in hours?
 
-- 122
-- 142
+- ~~122~~
+- ~~142~~
 - 162
-- 182
+- ~~182~~
 
 
 ## Question 5: User Interface
