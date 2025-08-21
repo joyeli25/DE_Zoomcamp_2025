@@ -48,12 +48,22 @@ Read the October 2024 Yellow into a Spark Dataframe.
 
 Repartition the Dataframe to 4 partitions and save it to parquet.
 
+```bash
+ls -lh data/yellow/
+```
+>total 97M
+-rw-r--r-- 1 joye joye   0 Aug 21 08:16 _SUCCESS
+-rw-r--r-- 1 joye joye 25M Aug 21 08:16 part-00000-4b526bfd-d542-445a-83ba-727d9e887ca0-c000.snappy.parquet
+-rw-r--r-- 1 joye joye 25M Aug 21 08:16 part-00001-4b526bfd-d542-445a-83ba-727d9e887ca0-c000.snappy.parquet
+-rw-r--r-- 1 joye joye 25M Aug 21 08:16 part-00002-4b526bfd-d542-445a-83ba-727d9e887ca0-c000.snappy.parquet
+-rw-r--r-- 1 joye joye 25M Aug 21 08:16 part-00003-4b526bfd-d542-445a-83ba-727d9e887ca0-c000.snappy.parquet
+
 What is the average size of the Parquet (ending with .parquet extension) Files that were created (in MB)? Select the answer which most closely matches.
 
-- 6MB
+- ~~6MB~~
 - 25MB
-- 75MB
-- 100MB
+- ~~75MB~~
+- ~~100MB~~
 
 
 ## Question 3: Count records 
