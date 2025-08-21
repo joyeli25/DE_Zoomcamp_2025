@@ -76,14 +76,10 @@ SELECT
     count(1)
 FROM
     yellow_trips_data
-where extract(year from pickup_datetime)=2024
-and extract(month from pickup_datetime)=10
-and extract(day from pickup_datetime)=15
-
+where extract(day from pickup_datetime)=15
 """).show()
 ```
->[Stage 21:=============================================>          (13 + 3) / 16]
-+--------+
+>+--------+
 |count(1)|
 +--------+
 |  128893|
