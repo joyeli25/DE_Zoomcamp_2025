@@ -257,13 +257,47 @@ Now...
 2. For each record in `dim_fhv_trips.sql`, compute the [timestamp_diff](https://cloud.google.com/bigquery/docs/reference/standard-sql/timestamp_functions#timestamp_diff) in seconds between dropoff_datetime and pickup_datetime - we'll call it `trip_duration` for this exercise
 3. Compute the **continous** `p90` of `trip_duration` partitioning by year, month, pickup_location_id, and dropoff_location_id
 
+```sql
+with fhv_trip as (
+select 
+extract(year from pickup_datetime) as year,
+extract(month from pickup_datetime) as month,
+timestamp_diff(dropoff_datetime,pickup_datetime,second) as trip_duration,
+pickup_locationid,
+dropoff_locationid
+from `copper-seeker-466202-f5.dbt_taxi_hw.stg_fhv_tripdata`
+where dispatching_base_num is not null
+)
+select distinct
+year,
+month,
+pickup_zone.zone as pickupzone,
+dropoff_zone.zone as dropoffzone,
+percentile_cont(trip_duration, 0.90) over (
+    partition by year, month, pickup_locationid,dropoff_locationid
+) as p90_trip_duration
+from fhv_trip
+inner join `dbt_taxi_hw.dim_zone_lookup` as pickup_zone
+on fhv_trip.pickup_locationid = pickup_zone.locationid
+inner join `dbt_taxi_hw.dim_zone_lookup` as dropoff_zone
+on fhv_trip.dropoff_locationid = dropoff_zone.locationid
+```
+
+```sql
+select *
+from `copper-seeker-466202-f5.dbt_taxi_hw.dim_fhv_trips`
+where month=11
+and pickupzone in ("Newark Airport", "SoHo", "Yorkville East")
+order by pickupzone, p90_trip_duration desc
+```
+
 For the Trips that **respectively** started from `Newark Airport`, `SoHo`, and `Yorkville East`, in November 2019, what are **dropoff_zones** with the 2nd longest p90 trip_duration ?
 
 - LaGuardia Airport, Chinatown, Garment District
-- LaGuardia Airport, Park Slope, Clinton East
-- LaGuardia Airport, Saint Albans, Howard Beach
-- LaGuardia Airport, Rosedale, Bath Beach
-- LaGuardia Airport, Yorkville East, Greenpoint
+- ~~LaGuardia Airport, Park Slope, Clinton East~~
+- ~~LaGuardia Airport, Saint Albans, Howard Beach~~
+- ~~LaGuardia Airport, Rosedale, Bath Beach~~
+- ~~LaGuardia Airport, Yorkville East, Greenpoint~~
 
 
 ## Submitting the solutions
