@@ -70,12 +70,31 @@ What is the average size of the Parquet (ending with .parquet extension) Files t
 
 How many taxi trips were there on the 15th of October?
 
+```sql
+spark.sql("""
+SELECT
+    count(1)
+FROM
+    yellow_trips_data
+where extract(year from pickup_datetime)=2024
+and extract(month from pickup_datetime)=10
+and extract(day from pickup_datetime)=15
+
+""").show()
+```
+>[Stage 21:=============================================>          (13 + 3) / 16]
++--------+
+|count(1)|
++--------+
+|  128893|
++--------+
+
 Consider only trips that started on the 15th of October.
 
-- 85,567
-- 105,567
+- ~~85,567~~
+- ~~105,567~~
 - 125,567
-- 145,567
+- ~~145,567~~
 
 
 ## Question 4: Longest trip
