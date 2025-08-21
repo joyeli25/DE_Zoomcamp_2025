@@ -122,12 +122,14 @@ What is the length of the longest trip in the dataset in hours?
 
 ## Question 5: User Interface
 
+>http://localhost:4040/jobs/
+
 Spark’s User Interface which shows the application's dashboard runs on which local port?
 
-- 80
-- 443
+- ~~80~~
+- ~~443~~
 - 4040
-- 8080
+- ~~8080~~
 
 
 
