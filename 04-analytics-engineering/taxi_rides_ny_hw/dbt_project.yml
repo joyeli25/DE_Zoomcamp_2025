@@ -39,11 +39,3 @@ models:
   taxi_rides_ny_hw:
     # Applies to all files under models/example/
 
-vars:
-  payment_type_values: [1,2,3,4,5,6]
-
-seeds: 
-    taxi_rides_ny_hw:
-        taxi_zone_lookup:
-            +column_types:
-                locationid: numeric

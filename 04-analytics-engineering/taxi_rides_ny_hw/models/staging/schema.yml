@@ -1,0 +1,11 @@
+version: 2
+
+sources:
+  - name: staging   # Logical name you choose for use in dbt code
+    database: copper-seeker-466202-f5  # GCP Project ID that owns the data
+    schema: raw_nyc_tlc_record_data  # BigQuery dataset name (like `staging`, `raw`, etc.)
+
+    tables:
+      - name: ext_green_taxi   # Table name inside the dataset
+      - name: ext_yellow_taxi    # Table name inside the dataset
+      - name: ext_fhv_all  # Table name inside the dataset
