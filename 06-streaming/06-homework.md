@@ -72,6 +72,7 @@ Find out what you need to execute based on the `help` output.
 
 What's the version, based on the output of the command you executed? (copy the entire version)
 
+#### Answer:
 ```bash
 docker exec redpanda-1 rpk version
 ```
