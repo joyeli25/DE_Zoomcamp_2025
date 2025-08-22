@@ -97,6 +97,11 @@ Read the output of `help` and based on it, create a topic with name `green-trips
 
 What's the output of the command for creating a topic? Include the entire output in your answer.
 
+```bash
+docker exec redpanda-1 rpk topic create green-trips
+```
+>TOPIC        STATUS
+green-trips  OK
 
 ## Question 3. Connecting to the Kafka server
 
