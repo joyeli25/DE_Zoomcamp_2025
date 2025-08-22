@@ -140,6 +140,7 @@ producer.bootstrap_connected()
 
 Provided that you can connect to the server, what's the output
 of the last command?
+>True
 
 ## Question 4: Sending the Trip Data
 
