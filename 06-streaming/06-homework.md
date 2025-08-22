@@ -185,7 +185,39 @@ took = t1 - t0
 ```
 
 How much time did it take to send the entire dataset and flush? 
+```python
+import gzip
+import csv
+from time import time
 
+topic_name = 'green-trips'
+csv_file = 'green_tripdata_2019-10.csv.gz'
+
+t0 = time()
+
+with gzip.open(csv_file, 'rt', newline='', encoding='utf-8') as file:
+    reader = csv.DictReader(file)
+
+    for row in reader:
+        # Keep only the required columns
+        message = {
+            'lpep_pickup_datetime': row['lpep_pickup_datetime'],
+            'lpep_dropoff_datetime': row['lpep_dropoff_datetime'],
+            'PULocationID': row['PULocationID'],
+            'DOLocationID': row['DOLocationID'],
+            'passenger_count': row['passenger_count'],
+            'trip_distance': row['trip_distance'],
+            'tip_amount': row['tip_amount']
+        }
+        producer.send(topic_name, value=message)
+
+producer.flush()
+producer.close()
+
+t1 = time()
+print(f"Took {t1 - t0:.2f} seconds to send all messages and flush")
+```
+>Took 43.27 seconds to send all messages and flush
 
 ## Question 5: Build a Sessionization Window (2 points)
 
