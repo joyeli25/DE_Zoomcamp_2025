@@ -230,6 +230,44 @@ Now we have the data in the Kafka stream. It's time to process it.
 * Which pickup and drop off locations have the longest unbroken streak of taxi trips?
 
 ```sql
+with cte1 as (
+SELECT
+    pickup_date,
+    PULocationID,
+    DOLocationID, 
+    count(pickup_date) as cnt
+FROM
+    green_trips
+group by pickup_date,PULocationID,DOLocationID
+),
+cte2 as (
+select 
+    PULocationID,
+    DOLocationID,
+    pickup_date,
+    row_number()over(partition by PULocationID,DOLocationID order by pickup_date) as rk,
+    COALESCE(
+            DATEDIFF(
+                CAST(pickup_date AS DATE), 
+                DATE('1970-01-01')
+            ) - 
+            cast(row_number() OVER (PARTITION BY PULocationID, DOLocationID ORDER BY pickup_date) as int),
+            0
+        ) as diff
+from cte1 
+order by PULocationID,DOLocationID,pickup_date
+)
+select 
+    PULocationID,
+    DOLocationID, 
+    count(diff) as unbroken_streak
+from cte2
+group by PULocationID,DOLocationID, diff
+order by 3 desc,1,2
+limit 9
+```
+
+```sql
 PULocationID|DOLocationID|unbroken_streak|
 +------------+------------+---------------+
 |         166|         151|             32|
