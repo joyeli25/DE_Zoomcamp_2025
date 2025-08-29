@@ -19,3 +19,12 @@ This dataset reflects reported incidents of crime (with the exception of murders
 - [Crimes_-_2024_20250828.csv.gz](https://github.com/user-attachments/files/22035794/Crimes_-_2024_20250828.csv.gz)
 
 - [Crimes_-_2025_20250828.csv.gz](https://github.com/user-attachments/files/22035796/Crimes_-_2025_20250828.csv.gz)
+
+
+
+### Chicago Police Department - Illinois Uniform Crime Reporting (IUCR) Codes
+##### Last Updated: December 8, 2021
+##### Data Provided By: Chicago Police Department
+
+[Chicago_Police_Department_-_Illinois_Uniform_Crime_Reporting_(IUCR)_Codes_20250828.csv](https://github.com/user-attachments/files/22036169/Chicago_Police_Department_-_Illinois_Uniform_Crime_Reporting_.IUCR._Codes_20250828.csv)
+
