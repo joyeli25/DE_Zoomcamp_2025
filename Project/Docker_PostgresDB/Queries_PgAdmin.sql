@@ -1,5 +1,5 @@
 ------Create Materialized View in PgAdmin---------------------------
-```sql
+
 CREATE MATERIALIZED VIEW chi_crime_all AS
 SELECT * FROM chi_crime_2021
 UNION ALL
@@ -10,7 +10,7 @@ UNION ALL
 SELECT * FROM chi_crime_2024
 UNION ALL
 SELECT * FROM chi_crime_2025;
-```
+
 --------Create indexes for better performance------------
 CREATE INDEX idx_crime_date ON chi_crime_all("Date");
 CREATE INDEX idx_crime_type ON chi_crime_all("Primary Type");
@@ -19,8 +19,8 @@ CREATE INDEX idx_crime_geo ON chi_crime_all("Latitude", "Longitude");
 
 
 -----------------Analysis Matrics--------------------
---1. Temporal Analysis Matrix
---1--- Crime trends over time
+1. Temporal Analysis Matrix
+----- Crime trends over time
 SELECT 
     EXTRACT(YEAR FROM "Date") as year,
     EXTRACT(MONTH FROM "Date") as month,
@@ -31,8 +31,8 @@ FROM chi_crime_all
 GROUP BY year, month, "Primary Type"
 ORDER BY year, month, incident_count DESC;
 
---2. Geographic Hotspot Matrix
---2--- Spatial crime distribution
+2. Geographic Hotspot Matrix
+----- Spatial crime distribution
 SELECT 
     "District",
     "Ward", 
@@ -50,48 +50,8 @@ GROUP BY "District",
     "Primary Type"
 ORDER BY incident_count DESC;
 
-------------District, Ward, Community Area-----------------------------------
-📍 1. Police District
-
-Purpose: Law enforcement.
-
-Chicago is divided into 22 police districts, each with its own police station.
-
-Example: District 1 = Central (Downtown Loop), District 25 = Grand Central.
-
-Crimes are recorded with the district that responded to or has jurisdiction over that location.
-
-🏛️ 2. Ward
-
-Purpose: Political boundaries for City Council representation.
-
-Chicago has 50 wards, each represented by an alderman.
-
-Wards are used for legislation, zoning, and political purposes, not policing.
-
-🏘️ 3. Community Area
-
-Purpose: Research & urban planning.
-
-Chicago has 77 community areas, which are fixed statistical boundaries (unlike wards, which change with redistricting).
-
-Designed in the 1920s by the University of Chicago for consistent sociological and demographic studies.
-
-Example: Hyde Park = Community Area 41, Englewood = Community Area 68.
-
-🔑 Relationship Between Them
-
-They often overlap, but they are independent boundary systems:
-
-A single community area may span multiple wards or districts.
-
-A police district might include parts of several community areas.
-
-Wards are political and change with redistricting, but community areas never change (making them good for long-term trend analysis).
---------------------------------------------------------------------------------
-
---3. Crime Type Analysis Matrix
---3--- Crime type effectiveness matrix
+3. Crime Type Analysis Matrix
+----- Crime type effectiveness matrix
 SELECT 
     "Primary Type",
     "Description",
@@ -105,8 +65,8 @@ GROUP BY "Primary Type",
     "Description"
 ORDER BY total_incidents DESC;
 
---4. Time-Based Pattern Matrix
---4--- Hourly and daily patterns
+4. Time-Based Pattern Matrix
+----- Hourly and daily patterns
 SELECT 
     "Primary Type",
     EXTRACT(HOUR FROM "Date") as crime_hour,
@@ -117,8 +77,8 @@ FROM chi_crime_all
 GROUP BY "Primary Type", crime_hour, day_of_week
 ORDER BY "Primary Type", incident_count DESC;
 
---5. Location Risk Assessment Matrix
---5--- Location-based risk analysis
+5. Location Risk Assessment Matrix
+----- Location-based risk analysis
 SELECT 
     "Location Description",
     "Primary Type",
@@ -132,8 +92,8 @@ GROUP BY "Location Description",
 HAVING COUNT(*) > 100  -- Only significant locations
 ORDER BY total_incidents DESC;
 
---6. FBI Code Severity Matrix
---6--- Crime severity analysis by FBI codes and IUCR Codes
+6. FBI Code Severity Matrix
+----- Crime severity analysis by FBI codes and IUCR Codes
 SELECT 
     "FBI Code", 
    cca. "Primary Type",
@@ -149,42 +109,8 @@ GROUP BY "FBI Code",
    cca."IUCR", icl."PRIMARY DESCRIPTION", icl."SECONDARY DESCRIPTION"
 ORDER BY incident_count DESC;
 
---------------------------------------------------------------------------------
-📌 What is a Beat?
-
-The smallest police geographic area in Chicago.
-
-Each beat is assigned officers who regularly patrol and know the neighborhood.
-
-Beats roll up into sectors → districts → areas (hierarchy of CPD).
-
-🏙️ Hierarchy Example (Chicago PD structure)
-
-Beat → Smallest unit (few blocks to a neighborhood).
-
-Sector → Group of 3–5 beats.
-
-District → Group of sectors (Chicago has 22 police districts).
-
-Area → Larger police area covering multiple districts.
-
-📊 Why it’s in the data
-
-Every crime is reported at the beat level to track local crime trends.
-
-Used for resource deployment (e.g., more patrols in high-crime beats).
-
-Lets you do fine-grained analysis:
-
-Crime hotspots
-
-Correlation with socioeconomic factors
-
-Comparison across beats, districts, wards, or community areas
---------------------------------------------------------------------------------
-
---7. Beat and District Performance Matrix
---7--- Law enforcement effectiveness by area
+7. Beat and District Performance Matrix
+----- Law enforcement effectiveness by area
 SELECT 
     "District",
     "Beat",
@@ -197,8 +123,8 @@ GROUP BY  "District",
     "Beat"
 ORDER BY clearance_rate DESC, total_incidents DESC;
 
---8. Community Area Vulnerability Matrix
---8--- Community area risk profiling
+8. Community Area Vulnerability Matrix
+----- Community area risk profiling
 SELECT 
     "Community Area",
     COUNT(*) as total_crimes,
@@ -210,8 +136,8 @@ WHERE "Community Area" IS NOT NULL
 GROUP BY "Community Area"
 ORDER BY total_crimes DESC;
 
---9. Seasonal Trend Analysis Matrix
---9--- Seasonal crime patterns
+9. Seasonal Trend Analysis Matrix
+----- Seasonal crime patterns
 SELECT 
     "Primary Type",
     EXTRACT(QUARTER FROM "Date") as quarter,
@@ -222,8 +148,8 @@ FROM chi_crime_all
 GROUP BY "Primary Type", quarter, month
 ORDER BY "Primary Type", quarter, incident_count DESC;
 
---10. Comprehensive Dashboard Query
---10--- Executive summary dashboard
+10. Comprehensive Dashboard Query
+----- Executive summary dashboard
 SELECT 
     EXTRACT(YEAR FROM "Date") as year,
     COUNT(*) as total_incidents,
