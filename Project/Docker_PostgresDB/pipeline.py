@@ -79,5 +79,5 @@ docker run -it \
     --host=pgdatabase \
     --port=5432 \
     --db=chi_crime \
-    --table_name=IUCR_codes_lookup_2 \
+    --table_name=iucr_codes_lookup \
     --url=${url}
