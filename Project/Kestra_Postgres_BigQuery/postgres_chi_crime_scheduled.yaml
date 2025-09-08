@@ -1,0 +1,185 @@
+id: postgres_chi_crime_scheduled
+namespace: deproject
+description: |
+  Best to add a label `backfill:true` from the UI to track executions created via a backfill.
+  CSV data used here comes from GitHub Releases https://github.com/joyeli25/DE_Zoomcamp_2025/releases/tag/crime-data into PostgreSQL. 
+  Handles both historical backfills and incremental monthly updates.
+  
+concurrency:
+  limit: 1
+
+inputs:
+  - id: year
+    type: SELECT
+    displayName: Select year
+    values: ["2021","2022","2023","2024","2025"]
+    defaults: "2025"
+
+
+variables:
+  file: "Crimes_-_{{inputs.year}}_20250828.csv"
+  staging_table: "public.chi_crime_{{inputs.year}}_staging"
+  table: "public.chi_crime_all"
+
+tasks:
+  - id: set_label
+    type: io.kestra.plugin.core.execution.Labels
+    labels:
+      year: "{{inputs.year}}"
+
+  - id: extract
+    type: io.kestra.plugin.scripts.shell.Commands
+    outputFiles:
+      - "*.csv"
+    taskRunner:
+      type: io.kestra.plugin.core.runner.Process
+    commands:
+      - wget -qO- https://github.com/joyeli25/DE_Zoomcamp_2025/releases/download/crime-data/Crimes_-_{{inputs.year}}_20250828.csv.gz | gunzip > {{render(vars.file)}}
+
+  - id: create_main_table
+    type: io.kestra.plugin.jdbc.postgresql.Queries
+    description: Create main crimes table if it doesn't exist
+    sql: |
+      CREATE TABLE IF NOT EXISTS {{render(vars.table)}} (
+          unique_row_id TEXT PRIMARY KEY,
+          filename TEXT,
+          ID INTEGER,
+          Case_Number TEXT,
+          Date TEXT,
+          Block TEXT,
+          IUCR TEXT,
+          Primary_Type TEXT,
+          Description TEXT,
+          Location_Description TEXT,
+          Arrest BOOLEAN,
+          Domestic BOOLEAN,
+          Beat INTEGER,
+          District INTEGER,
+          Ward INTEGER,
+          Community_Area INTEGER,
+          FBI_Code TEXT,
+          X_Coordinate FLOAT,
+          Y_Coordinate FLOAT,
+          Year INTEGER,
+          Updated_On TEXT,
+          Latitude FLOAT,
+          Longitude FLOAT,
+          Location TEXT
+      );
+
+  - id: create_staging_table
+    type: io.kestra.plugin.jdbc.postgresql.Queries
+    description: Create staging table with same schema as main table
+    sql: |
+      CREATE TABLE IF NOT EXISTS {{render(vars.staging_table)}} (
+          unique_row_id TEXT,
+          filename TEXT,
+          ID INTEGER,
+          Case_Number TEXT,
+          Date TEXT,
+          Block TEXT,
+          IUCR TEXT,
+          Primary_Type TEXT,
+          Description TEXT,
+          Location_Description TEXT,
+          Arrest BOOLEAN,
+          Domestic BOOLEAN,
+          Beat INTEGER,
+          District INTEGER,
+          Ward INTEGER,
+          Community_Area INTEGER,
+          FBI_Code TEXT,
+          X_Coordinate FLOAT,
+          Y_Coordinate FLOAT,
+          Year INTEGER,
+          Updated_On TEXT,
+          Latitude FLOAT,
+          Longitude FLOAT,
+          Location TEXT
+      );
+
+  - id: truncate_staging_table
+    type: io.kestra.plugin.jdbc.postgresql.Queries
+    sql: |
+      TRUNCATE TABLE {{render(vars.staging_table)}};
+
+  - id: load_to_staging_table
+    type: io.kestra.plugin.jdbc.postgresql.CopyIn
+    format: CSV
+    from: "{{outputs.extract.outputFiles[render(vars.file)]}}"
+    table: "{{render(vars.staging_table)}}"
+    header: true
+    delimiter: ","
+    quote: "\""
+    escape: "\""
+    columns: [
+      "ID", "Case_Number", "Date", "Block", "IUCR", 
+      "Primary_Type", "Description", "Location_Description", "Arrest", "Domestic", 
+      "Beat", "District", "Ward", "Community_Area", "FBI_Code", "X_Coordinate", 
+      "Y_Coordinate", "Year", "Updated_On", "Latitude", "Longitude", "Location"
+    ]  # Column names in staging table, but Only include columns that exist in the CSV
+
+  - id: generate_unique_id_and_filename
+    type: io.kestra.plugin.jdbc.postgresql.Queries
+    sql: |
+      UPDATE {{render(vars.staging_table)}}
+      SET 
+        unique_row_id = md5(
+          COALESCE(CAST(ID AS text), '') ||
+          COALESCE(CAST(Case_Number AS text), '') || 
+          COALESCE(CAST(Date AS text), '') || 
+          COALESCE(CAST(X_Coordinate AS text), '') ||
+          COALESCE(CAST(Y_Coordinate AS text), '')       
+        ),
+        filename = '{{render(vars.file)}}';
+
+  - id: merge_to_main
+    type: io.kestra.plugin.jdbc.postgresql.Queries
+    description: Merge data from staging to main table, avoiding duplicates
+    sql: |
+      INSERT INTO {{render(vars.table)}} (
+          unique_row_id, filename, ID, Case_Number, Date, Block, IUCR, Primary_Type, Description,
+          Location_Description, Arrest, Domestic, Beat, District,Ward, Community_Area,
+          FBI_Code, X_Coordinate, Y_Coordinate, Year, Updated_On,
+          Latitude, Longitude, Location)
+        SELECT
+          unique_row_id, filename, ID, Case_Number, Date, Block, IUCR, Primary_Type, Description,
+          Location_Description, Arrest, Domestic, Beat, District,Ward, Community_Area,
+          FBI_Code, X_Coordinate, Y_Coordinate, Year, Updated_On,
+          Latitude, Longitude, Location
+        FROM {{render(vars.staging_table)}}
+        ON CONFLICT (unique_row_id)
+        DO UPDATE SET
+          Updated_On = EXCLUDED.Updated_On
+        WHERE {{render(vars.table)}}.Updated_On < EXCLUDED.Updated_On;
+
+  - id: cleanup
+    type: io.kestra.plugin.scripts.shell.Commands
+    description: Clean up downloaded files
+    taskRunner:
+      type: io.kestra.plugin.core.runner.Process
+    commands:
+      - rm -f "{{render(vars.file)}}" || true
+
+  - id: send_successs_notification
+    type: io.kestra.plugin.core.log.Log
+    message: |
+      Successfully loaded Chicago Crime data for {{inputs.year}}
+      File: {{render(vars.file)}}
+      Table: {{render(vars.table)}}
+
+
+pluginDefaults:
+  - type: io.kestra.plugin.jdbc.postgresql
+    values:
+      url: jdbc:postgresql://kestra_postgres_project:5432/chi-crime-project
+      username: root
+      password: root
+
+triggers:
+  - id: monthly_crimes_schedule
+    type: io.kestra.plugin.core.trigger.Schedule
+    cron: "0 8 15 * *"    # Run at 8 AM on the 15th of each month
+    inputs:
+      year: "2025"
+
