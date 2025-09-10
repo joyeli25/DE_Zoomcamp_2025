@@ -1,0 +1,161 @@
+id: 03_gcp_crime_scheduled
+namespace: deproject
+description: |
+  Best to add a label `backfill:true` from the UI to track executions created via a backfill.
+  CSV data used here comes from GitHub Releases https://github.com/joyeli25/DE_Zoomcamp_2025/releases/tag/crime-data 
+  into GCS and BigQuery tables. Handles both historical backfills and incremental monthly updates.
+  
+concurrency:
+  limit: 1
+
+inputs:
+  - id: year
+    type: SELECT
+    displayName: Select year
+    values: ["2021","2022","2023","2024","2025"]
+    defaults: "2025"
+
+variables:
+  file: "Crimes_{{inputs.year}}_{{execution.startDate | date('yyyy-MM-dd')}}.csv"
+  gcs_file: "gs://{{kv('GCP_BUCKET_NAME')}}/{{vars.file}}"
+  table: "{{kv('GCP_DATASET')}}.chi_crime_{{inputs.year}}"
+  #data: "{{outputs.extract.outputFiles[vars.file]}}"
+
+tasks:
+  - id: set_label
+    type: io.kestra.plugin.core.execution.Labels
+    labels:
+      file: "{{render(vars.file)}}"
+      year: "{{inputs.year}}"
+
+  - id: extract
+    type: io.kestra.plugin.scripts.shell.Commands
+    outputFiles:
+      - "*.csv"
+    taskRunner:
+      type: io.kestra.plugin.core.runner.Process
+    commands:
+      - wget -qO- https://github.com/joyeli25/DE_Zoomcamp_2025/releases/download/crime-data/Crimes_-_{{inputs.year}}_20250828.csv.gz | gunzip > "Crimes_{{inputs.year}}_{{execution.startDate | date('yyyy-MM-dd')}}.csv"
+
+  - id: upload_to_gcs
+    type: io.kestra.plugin.gcp.gcs.Upload
+    from: "{{outputs.extract.outputFiles[render(vars.file)]}}"  #"{{render(vars.data)}}"
+    to: "{{render(vars.gcs_file)}}"
+
+  - id: bq_chi_crime_data
+    type: io.kestra.plugin.gcp.bigquery.Query
+    sql: |
+      CREATE TABLE IF NOT EXISTS `{{kv('GCP_PROJECT_ID')}}.{{kv('GCP_DATASET')}}.chi_crime_data_all`
+      (
+        unique_row_id STRING,
+        filename STRING,
+        ID INT64,
+        Case_Number STRING,
+        Date STRING,
+        Block STRING,
+        IUCR STRING,
+        Primary_Type STRING,
+        Description STRING,
+        Location_Description STRING,
+        Arrest BOOL,
+        Domestic BOOL,
+        Beat INT64,
+        District INT64,
+        Ward INT64,
+        Community_Area INT64,
+        FBI_Code STRING,
+        X_Coordinate FLOAT64,
+        Y_Coordinate FLOAT64,
+        Year INT64,
+        Updated_On STRING,
+        Latitude FLOAT64,
+        Longitude FLOAT64,
+        Location STRING  
+      )
+      PARTITION BY RANGE_BUCKET(Year, GENERATE_ARRAY(2000, 2030, 1))
+      CLUSTER BY Primary_Type, Community_Area;
+
+  - id: bq_chi_crime_data_ext
+    type: io.kestra.plugin.gcp.bigquery.Query
+    sql: |
+      CREATE OR REPLACE EXTERNAL TABLE `{{kv('GCP_PROJECT_ID')}}.{{render(vars.table)}}_ext`
+      (
+        ID INT64,
+        Case_Number STRING,
+        Date STRING,
+        Block STRING,
+        IUCR STRING,
+        Primary_Type STRING,
+        Description STRING,
+        Location_Description STRING,
+        Arrest BOOL,
+        Domestic BOOL,
+        Beat INT64,
+        District INT64,
+        Ward INT64,
+        Community_Area INT64,
+        FBI_Code STRING,
+        X_Coordinate FLOAT64,
+        Y_Coordinate FLOAT64,
+        Year INT64,
+        Updated_On STRING,
+        Latitude FLOAT64,
+        Longitude FLOAT64,
+        Location STRING
+      )
+      OPTIONS (
+          format = 'CSV',
+          uris = ['{{render(vars.gcs_file)}}'],
+          skip_leading_rows = 1,
+          ignore_unknown_values = TRUE
+      );
+
+  - id: bq_chi_crime_data_staging
+    type: io.kestra.plugin.gcp.bigquery.Query
+    sql: |
+      CREATE OR REPLACE TABLE `{{kv('GCP_PROJECT_ID')}}.{{render(vars.table)}}`
+      AS
+      SELECT
+        TO_HEX(MD5(CONCAT(
+          COALESCE(CAST(ID AS STRING), ''),
+          COALESCE(CAST(Case_Number AS STRING), ''), 
+          COALESCE(CAST(Date AS STRING), ''), 
+          COALESCE(CAST(X_Coordinate AS STRING), ''),
+          COALESCE(CAST(Y_Coordinate AS STRING), '')
+        ))) AS unique_row_id,
+        "{{render(vars.file)}}" AS filename,
+        *
+      FROM `{{kv('GCP_PROJECT_ID')}}.{{render(vars.table)}}_ext`;
+
+  - id: bq_chi_crime_merge
+    type: io.kestra.plugin.gcp.bigquery.Query
+    sql: |
+      MERGE INTO `{{kv('GCP_PROJECT_ID')}}.{{kv('GCP_DATASET')}}.chi_crime_data_all` T
+      USING `{{kv('GCP_PROJECT_ID')}}.{{render(vars.table)}}` S
+      ON T.unique_row_id = S.unique_row_id
+      WHEN NOT MATCHED THEN
+        INSERT (unique_row_id, filename, ID, Case_Number, Date, Block, IUCR, Primary_Type, 
+          Description, Location_Description, Arrest, Domestic, Beat, District,Ward, Community_Area,
+          FBI_Code, X_Coordinate, Y_Coordinate, Year, Updated_On, Latitude, Longitude, Location)
+        VALUES (S.unique_row_id, S.filename, S.ID, S.Case_Number, S.Date, S.Block, S.IUCR, S.Primary_Type, 
+          S.Description, S.Location_Description, S.Arrest, S.Domestic, S.Beat, S.District,S.Ward, S.Community_Area,
+          S.FBI_Code, S.X_Coordinate, S.Y_Coordinate, S.Year, S.Updated_On, S.Latitude, S.Longitude, S.Location);
+
+  - id: purge_files
+    type: io.kestra.plugin.core.storage.PurgeCurrentExecutionFiles
+    description: To avoid cluttering your storage, we will remove the downloaded files
+
+pluginDefaults:
+  - type: io.kestra.plugin.gcp
+    values:
+      serviceAccount: "{{kv('GCP_CREDS')}}"
+      projectId: "{{kv('GCP_PROJECT_ID')}}"
+      location: "{{kv('GCP_LOCATION')}}"
+      bucket: "{{kv('GCP_BUCKET_NAME')}}"
+
+triggers:
+  - id: monthly_crimes_schedule
+    type: io.kestra.plugin.core.trigger.Schedule
+    cron: "0 8 15 * *"    # Run at 8 AM on the 15th of each month
+    inputs:
+      year: "2025"
