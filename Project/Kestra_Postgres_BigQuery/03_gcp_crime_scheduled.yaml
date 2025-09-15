@@ -72,8 +72,8 @@ tasks:
         Longitude FLOAT64,
         Location STRING  
       )
-      PARTITION BY RANGE_BUCKET(Year, GENERATE_ARRAY(2000, 2030, 1))
-      CLUSTER BY Primary_Type, Community_Area;
+      # PARTITION BY RANGE_BUCKET(Year, GENERATE_ARRAY(2000, 2030, 1))
+      # CLUSTER BY Primary_Type, Community_Area;
 
   - id: bq_chi_crime_data_ext
     type: io.kestra.plugin.gcp.bigquery.Query
