@@ -7,4 +7,3 @@ sources:
 
     tables:
       - name: chi_crime_all   # Table name inside the dataset
-      - name: iucr_codes_lookup
