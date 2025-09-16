@@ -6,4 +6,8 @@ sources:
     schema: chi_crime_dataset  # BigQuery dataset name (like `staging`, `raw`, etc.)
 
     tables:
+<<<<<<< HEAD
       - name: chi_crime_all   # Table name inside the dataset
+=======
+      - name: chi_crime_all   # Table name inside the dataset
+>>>>>>> fc9ea785d4d564705b96c561b90d18af5e6f3e1c
