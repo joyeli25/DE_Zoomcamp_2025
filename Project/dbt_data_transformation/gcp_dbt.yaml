@@ -1,0 +1,62 @@
+id: 04_gcp_dbt
+namespace: deproject
+inputs:
+  - id: dbt_command
+    type: SELECT
+    allowCustomValue: true
+    defaults: dbt build
+    values:
+      - dbt clean
+      - dbt deps
+      - dbt build # to run models
+      - dbt debug # use when running the first time to validate DB connection
+
+tasks: 
+  - id: clean_workspace
+    type: io.kestra.plugin.scripts.shell.Commands
+    commands:
+      - echo "Cleaning workspace before sync..."
+      - rm -rf Project/dbt_data_transformation/chi_crime_project/* 2>/dev/null || true
+      - rm -rf Project/dbt_data_transformation/chi_crime_project/.* 2>/dev/null || true
+
+  - id: clone_repo
+    type: io.kestra.plugin.git.Clone
+    url: https://github.com/joyeli25/DE_Zoomcamp_2025
+    branch: main
+
+  - id: dbt-build
+    type: io.kestra.plugin.dbt.cli.DbtCLI
+    env:
+      DBT_DATABASE: chi-crime-project
+      DBT_SCHEMA: chi_crime_dataset
+    namespaceFiles:
+      enabled: true
+    containerImage: ghcr.io/kestra-io/dbt-bigquery:latest
+    taskRunner:
+      type: io.kestra.plugin.scripts.runner.docker.Docker
+    inputFiles:
+      sa.json: "{{kv('GCP_CREDS')}}"
+    commands:
+      - dbt clean
+      - dbt deps
+      - dbt run --target dev
+      - "{{ inputs.dbt_command }}"
+    profiles: |
+      default:
+        outputs:
+          dev:
+            type: bigquery
+            dataset: chi_crime_dataset
+            project: chi-crime-project
+            keyfile: sa.json
+            method: service-account
+            location: US
+            priority: interactive
+            threads: 16
+            timeout_seconds: 300
+            fixed_retries: 1
+        target: dev
+
+
+
+
