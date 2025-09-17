@@ -1,0 +1,14 @@
+id: test_connection
+namespace: deproject
+
+tasks:
+  - id: minimal_test
+    type: io.kestra.plugin.gcp.bigquery.Query
+    sql: SELECT 1 as test
+
+pluginDefaults:
+  - type: io.kestra.plugin.gcp
+    values:
+      serviceAccount: "{{kv('GCP_CREDS')}}"
+      projectId: "{{kv('GCP_PROJECT_ID')}}"
+      location: "{{kv('GCP_LOCATION')}}"
