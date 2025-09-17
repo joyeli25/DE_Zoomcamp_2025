@@ -1,0 +1,11 @@
+chi_crime_project:
+  target: dev
+  outputs:
+    dev:
+      type: bigquery
+      method: service-account
+      project: chi-crime-project
+      dataset: dbt_chi_crime_pj        # 👈 where dbt builds models
+      location: us-central1
+      keyfile: /app/secrets/keyfile.json   # 👈 path to your service account JSON inside container
+      threads: 4
